@@ -22,17 +22,26 @@ def apply_watermark(photo, mark, opacity, size_pct, margin_pct):
     return base
 
 
-BG, PANEL, FG, MUTED = "#0f0f17", "#181824", "#f2f2f7", "#8b8ba3"
-ACCENT, ACCENT_HOVER = "#7c5cff", "#9a80ff"
-CHANNEL_URL = "https://t.me/VABUGODE"
+import sys
+
+BG, PANEL, FG, MUTED = "#0d0d0c", "#171715", "#ecebe4", "#8a8a80"
+ACCENT, ACCENT_HOVER = "#d4c229", "#ecd94a"  # жёлтый «радиация»
+GLITCH_A, GLITCH_B = "#ff2ea6", "#3dff6a"
+BTN, BTN_HOVER, FIELD = "#252522", "#34342f", "#252522"
+CHANNEL_URL = "https://t.me/vabugode"
+
+
+def resource(name):
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, name)
 FONT = "Segoe UI"
 
 
 def flat_button(parent, text, cmd, primary=False):
-    bg = ACCENT if primary else "#262636"
-    hover = ACCENT_HOVER if primary else "#33334a"
-    b = tk.Button(parent, text=text, command=cmd, bg=bg, fg=FG, activebackground=hover,
-                  activeforeground=FG, relief="flat", bd=0, cursor="hand2",
+    bg = ACCENT if primary else BTN
+    hover = ACCENT_HOVER if primary else BTN_HOVER
+    b = tk.Button(parent, text=text, command=cmd, bg=bg, fg="#111" if primary else FG, activebackground=hover,
+                  activeforeground="#111" if primary else FG, relief="flat", bd=0, cursor="hand2",
                   font=(FONT, 11, "bold" if primary else "normal"), pady=9 if primary else 7)
     b.bind("<Enter>", lambda e: b.config(bg=hover))
     b.bind("<Leave>", lambda e: b.config(bg=bg))
@@ -42,7 +51,7 @@ def flat_button(parent, text, cmd, primary=False):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("VABUGODE • Авто-вотермарка")
+        self.title("vabugode • авто-вотермарка")
         self.geometry("1000x640")
         self.minsize(820, 560)
         self.configure(bg=BG)
@@ -59,20 +68,30 @@ class App(tk.Tk):
         st.configure("TFrame", background=PANEL)
         st.configure("TLabel", background=PANEL, foreground=FG, font=(FONT, 10))
         st.configure("Muted.TLabel", foreground=MUTED, font=(FONT, 9))
-        st.configure("TEntry", fieldbackground="#262636", foreground=FG, insertcolor=FG,
-                     bordercolor="#262636", lightcolor="#262636", darkcolor="#262636")
-        st.configure("Horizontal.TScale", background=PANEL, troughcolor="#262636")
-        st.configure("Horizontal.TProgressbar", background=ACCENT, troughcolor="#262636",
+        st.configure("TEntry", fieldbackground=FIELD, foreground=FG, insertcolor=FG,
+                     bordercolor=FIELD, lightcolor=FIELD, darkcolor=FIELD)
+        st.configure("Horizontal.TScale", background=PANEL, troughcolor=FIELD)
+        st.configure("Horizontal.TProgressbar", background=ACCENT, troughcolor=FIELD,
                      bordercolor=PANEL, lightcolor=ACCENT, darkcolor=ACCENT)
 
         # шапка
         head = tk.Frame(self, bg=BG)
         head.pack(fill="x", padx=18, pady=(14, 10))
-        tk.Label(head, text="VABUGODE", bg=BG, fg=FG, font=(FONT, 20, "bold")).pack(side="left")
-        tk.Label(head, text="  авто-вотермарка", bg=BG, fg=ACCENT,
-                 font=(FONT, 13)).pack(side="left", pady=(6, 0))
-        link = tk.Label(head, text="✈  Наш канал в Telegram", bg=BG, fg=ACCENT,
-                        font=(FONT, 10, "underline"), cursor="hand2")
+        try:
+            self._logo = ImageTk.PhotoImage(Image.open(resource("assets/logo.png")).resize((52, 52), Image.LANCZOS))
+            tk.Label(head, image=self._logo, bg=BG).pack(side="left", padx=(0, 12))
+        except Exception:
+            pass
+        title = tk.Canvas(head, bg=BG, width=260, height=44, highlightthickness=0)
+        title.pack(side="left")
+        f = (FONT, 26, "bold")
+        title.create_text(5, 24, text="vabugode", anchor="w", font=f, fill=GLITCH_A)
+        title.create_text(1, 22, text="vabugode", anchor="w", font=f, fill=GLITCH_B)
+        title.create_text(3, 23, text="vabugode", anchor="w", font=f, fill=FG)
+        tk.Label(head, text="авто-вотермарка", bg=BG, fg=ACCENT,
+                 font=(FONT, 12)).pack(side="left", pady=(10, 0))
+        link = tk.Label(head, text="✈  t.me/vabugode", bg=BG, fg=ACCENT,
+                        font=(FONT, 11, "underline"), cursor="hand2")
         link.pack(side="right")
         link.bind("<Button-1>", lambda e: webbrowser.open(CHANNEL_URL))
         tk.Frame(self, bg=ACCENT, height=2).pack(fill="x")
@@ -82,7 +101,7 @@ class App(tk.Tk):
         left = ttk.Frame(body, padding=16, width=310)
         left.pack(side="left", fill="y")
         left.pack_propagate(False)
-        self.canvas = tk.Canvas(body, bg="#0a0a10", highlightthickness=0)
+        self.canvas = tk.Canvas(body, bg="#080807", highlightthickness=0)
         self.canvas.pack(side="right", fill="both", expand=True, padx=(14, 0))
         self.canvas.bind("<Configure>", lambda e: self.preview())
 
@@ -110,7 +129,7 @@ class App(tk.Tk):
         row = ttk.Frame(left)
         row.pack(fill="x", pady=(2, 0))
         ttk.Entry(row, textvariable=self.out_dir).pack(side="left", fill="x", expand=True, ipady=3)
-        tk.Button(row, text="…", command=self.pick_out, bg="#262636", fg=FG, relief="flat",
+        tk.Button(row, text="…", command=self.pick_out, bg=FIELD, fg=FG, relief="flat",
                   bd=0, cursor="hand2", width=3).pack(side="right", padx=(6, 0))
         ttk.Label(left, text="по умолчанию: папка «watermarked» рядом с фото",
                   style="Muted.TLabel", wraplength=270).pack(anchor="w", pady=(2, 0))
